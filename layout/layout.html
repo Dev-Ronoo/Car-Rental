@@ -1,0 +1,61 @@
+<div class="app-shell">
+	<aside class="sidebar">
+		<a class="brand" routerLink="/dashboard" aria-label="FleetDesk dashboard">
+			<span class="brand-mark">F</span>
+			<span>FleetDesk</span>
+		</a>
+
+		<p class="nav-label">WORKSPACE</p>
+		<nav aria-label="Main navigation">
+			<a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+				<span class="nav-icon">◫</span> Dashboard
+			</a>
+			<a routerLink="/VehicleMaster" routerLinkActive="active">
+				<span class="nav-icon">▤</span> Vehicles
+			</a>
+			<a routerLink="/booking" routerLinkActive="active">
+				<span class="nav-icon">▣</span> Bookings
+			</a>
+			<a routerLink="/costomer-listing" routerLinkActive="active">
+				<span class="nav-icon">≡</span> Customer ledger
+			</a>
+		</nav>
+
+		<div class="sidebar-footer">
+			<span class="avatar">{{ user()?.initials }}</span>
+			<span><strong>{{ user()?.name }}</strong><small>{{ user()?.role }}</small></span>
+		</div>
+	</aside>
+
+	<div class="main-column">
+		<header class="topbar">
+			<span>Vehicle rental management</span>
+			<div class="topbar-actions">
+				<span class="environment-label"><span></span> POC workspace</span>
+				@if (user(); as profile) {
+					<div class="profile-control" (keydown.escape)="profileOpen.set(false)">
+						<button type="button" class="profile-trigger" aria-haspopup="true" [attr.aria-expanded]="profileOpen()" aria-controls="profile-panel" (click)="toggleProfile()">
+							<span class="profile-avatar">{{ profile.initials }}</span>
+							<span class="profile-trigger-name">{{ profile.name }}</span>
+							<span class="profile-chevron" aria-hidden="true">⌄</span>
+						</button>
+						@if (profileOpen()) {
+							<section class="profile-panel" id="profile-panel" aria-label="User profile">
+								<div class="profile-panel-heading">
+									<span class="profile-avatar profile-avatar-large">{{ profile.initials }}</span>
+									<span><strong>{{ profile.name }}</strong><small>{{ profile.role }}</small></span>
+								</div>
+								<div class="profile-detail"><span>Email address</span><strong>{{ profile.email }}</strong></div>
+								<div class="profile-detail"><span>Account type</span><strong>POC administrator</strong></div>
+								<button type="button" class="sign-out-button" (click)="signOut()"><span aria-hidden="true">↪</span> Sign out</button>
+							</section>
+						}
+					</div>
+				}
+			</div>
+		</header>
+		<div class="page-content">
+			<router-outlet />
+		</div>
+	</div>
+</div>

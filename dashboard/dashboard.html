@@ -1,0 +1,70 @@
+<main class="dashboard-page">
+	@if (loadError()) { <p class="api-error" role="alert">{{ loadError() }}</p> }
+	@if (loading()) { <p class="api-loading" role="status">Loading live rental data…</p> }
+	<header class="dashboard-heading">
+		<div>
+			<p class="eyebrow">{{ today | date: 'EEEE, MMMM d, y' | uppercase }}</p>
+			<h1>Good day, Administrator</h1>
+			<p class="subtitle">Here’s what’s happening across your fleet today.</p>
+		</div>
+		<a class="primary-action" routerLink="/booking">+ New booking</a>
+	</header>
+
+	<section class="metric-grid" aria-label="Fleet overview">
+		<article class="metric">
+			<span class="metric-top"><span class="metric-icon fleet-icon">▤</span> Fleet size</span>
+			<strong>{{ vehicles().length }}</strong>
+			<small>Vehicles in your fleet</small>
+		</article>
+		<article class="metric">
+			<span class="metric-top"><span class="metric-icon available-icon">✓</span> Available today</span>
+			<strong>{{ availableToday() }}</strong>
+			<small>Ready for a new rental</small>
+		</article>
+		<article class="metric">
+			<span class="metric-top"><span class="metric-icon active-icon">↗</span> Active rentals</span>
+			<strong>{{ activeRentals() }}</strong>
+			<small>{{ upcomingPickups() }} upcoming pickups</small>
+		</article>
+		<article class="metric revenue-metric">
+			<span class="metric-top"><span class="metric-icon revenue-icon">$</span> Booked revenue</span>
+			<strong>{{ bookedRevenue() | currency }}</strong>
+			<small>{{ bookings().length }} bookings recorded</small>
+		</article>
+	</section>
+
+	<section class="dashboard-content">
+		<div class="activity-panel">
+			<div class="panel-heading">
+				<div><h2>Upcoming activity</h2><p>Current and upcoming rentals</p></div>
+				<a routerLink="/booking">All bookings <span aria-hidden="true">→</span></a>
+			</div>
+			<div class="activity-table-wrap">
+				<table>
+					<thead><tr><th>Booking</th><th>Customer</th><th>Vehicle</th><th>Pickup</th><th>Status</th></tr></thead>
+					<tbody>
+						@for (booking of todayBookings(); track booking.id) {
+							<tr>
+								<td class="booking-id">{{ booking.id }}</td>
+								<td>{{ booking.customerName }}</td>
+								<td>{{ vehicleName(booking.vehicleId) }}</td>
+								<td>{{ booking.startDate | date: 'MMM d' }}</td>
+								<td><span class="status" [class.status-active]="booking.status === 'Active'">{{ booking.status }}</span></td>
+							</tr>
+						} @empty {
+							<tr><td colspan="5" class="empty-row">No active or upcoming rentals. Create a booking to get started.</td></tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<aside class="quick-panel">
+			<h2>Quick actions</h2>
+			<a routerLink="/booking"><span class="quick-symbol booking-symbol">+</span><span><strong>Create a booking</strong><small>Reserve a vehicle for a customer</small></span><span class="arrow">→</span></a>
+			<a routerLink="/VehicleMaster"><span class="quick-symbol vehicle-symbol">▤</span><span><strong>Add a vehicle</strong><small>Grow your rental fleet</small></span><span class="arrow">→</span></a>
+			<a routerLink="/costomer-listing"><span class="quick-symbol ledger-symbol">≡</span><span><strong>Customer ledger</strong><small>Review account activity</small></span><span class="arrow">→</span></a>
+			<div class="fleet-note"><span class="note-dot"></span><span><strong>Fleet status</strong><small>{{ availableToday() }} of {{ vehicles().length }} vehicles are available today</small></span></div>
+		</aside>
+	</section>
+</main>

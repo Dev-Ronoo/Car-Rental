@@ -1,0 +1,60 @@
+<main class="login-page">
+	<section class="login-story" aria-label="FleetDesk introduction">
+		<a class="brand" routerLink="/login" aria-label="FleetDesk home">
+			<span class="brand-mark">F</span>
+			<span>FleetDesk</span>
+		</a>
+		<div class="story-copy">
+			<p class="eyebrow">FLEET OPERATIONS, IN FOCUS</p>
+			<h1>Every rental.<br />One clear view.</h1>
+			<p class="story-description">Keep vehicles moving and every booking on track from one calm, connected workspace.</p>
+		</div>
+		<div class="story-footer"><span>VEHICLE RENTAL MANAGEMENT</span><span>POC WORKSPACE · 2026</span></div>
+	</section>
+
+	<section class="login-panel" aria-labelledby="login-title">
+		<div class="login-form-wrap">
+			<p class="eyebrow mobile-eyebrow">FLEETDESK WORKSPACE</p>
+			<h2 id="login-title">{{ mode() === 'login' ? 'Welcome back' : 'Create your account' }}</h2>
+			<p class="login-description">{{ mode() === 'login' ? 'Sign in to manage your rental operations.' : 'Set up your account to manage rental operations.' }}</p>
+
+			<div class="auth-tabs" role="tablist" aria-label="Account access">
+				<button type="button" role="tab" [attr.aria-selected]="mode() === 'login'" [class.selected]="mode() === 'login'" (click)="setMode('login')">Sign in</button>
+				<button type="button" role="tab" [attr.aria-selected]="mode() === 'signup'" [class.selected]="mode() === 'signup'" (click)="setMode('signup')">Create account</button>
+			</div>
+
+			<form class="login-form" (submit)="submitLogin($event)">
+				@if (mode() === 'signup') {
+					<label for="login-name">Full name</label>
+					<input id="login-name" name="name" type="text" autocomplete="name" minlength="2" maxlength="80" placeholder="Your name" required />
+				}
+				<label for="login-email">Work email</label>
+				<input id="login-email" name="email" type="email" autocomplete="username" placeholder="you@company.com" required />
+
+				<div class="password-label-row">
+					<label for="login-password">Password</label>
+				</div>
+				<div class="password-field">
+					<input id="login-password" name="password" [type]="passwordVisible() ? 'text' : 'password'" [attr.autocomplete]="mode() === 'signup' ? 'new-password' : 'current-password'" [attr.minlength]="mode() === 'signup' ? 10 : null" maxlength="100" [placeholder]="mode() === 'signup' ? 'At least 10 characters' : 'Enter your password'" required />
+					<button type="button" class="visibility-button" [attr.aria-label]="passwordVisible() ? 'Hide password' : 'Show password'" (click)="togglePasswordVisibility()">
+						{{ passwordVisible() ? 'Hide' : 'Show' }}
+					</button>
+				</div>
+				@if (mode() === 'signup') {
+					<label for="confirm-password">Confirm password</label>
+					<input class="confirm-password" id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" maxlength="100" placeholder="Enter your password again" required />
+				}
+
+				@if (errorMessage()) {
+					<p class="login-error" role="alert">{{ errorMessage() }}</p>
+				}
+				@if (mode() === 'signup') {
+					<p class="password-hint">Use at least 10 characters with an uppercase letter, a lowercase letter, and a number.</p>
+				}
+
+				<button class="submit-button" type="submit" [disabled]="submitting()">{{ submitting() ? (mode() === 'login' ? 'Signing in…' : 'Creating account…') : (mode() === 'login' ? 'Sign in' : 'Create account') }} <span aria-hidden="true">→</span></button>
+			</form>
+			<p class="security-note">Passwords are protected with secure one-way hashing.</p>
+		</div>
+	</section>
+</main>

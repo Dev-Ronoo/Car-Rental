@@ -1,0 +1,62 @@
+<main class="booking-page">
+	@if (loadError()) { <p class="api-error" role="alert">{{ loadError() }}</p> }
+	@if (loading()) { <p class="api-loading" role="status">Loading bookings from backend…</p> }
+	<header class="booking-heading">
+		<div><p class="eyebrow">RENTAL OPERATIONS</p><h1>Bookings</h1><p class="subtitle">Create reservations and manage every rental in one place.</p></div>
+		<button type="button" class="primary-action" (click)="showForm.update((open) => !open)">{{ showForm() ? 'Close form' : '+ New booking' }}</button>
+	</header>
+
+	@if (showForm()) {
+		<section class="booking-form-section">
+			<div class="form-heading"><div><h2>Create a booking</h2><p>Choose your dates to see which vehicles are available.</p></div></div>
+			<form class="booking-form" (submit)="createBooking($event)">
+				<label><span>Customer name</span><input name="customerName" required maxlength="80" placeholder="Full name" /></label>
+				<label><span>Email address</span><input name="customerEmail" type="email" required maxlength="120" placeholder="name@example.com" /></label>
+				<label><span>Pickup date</span><input name="startDate" type="date" [min]="today" [value]="startDate()" (change)="setStartDate($event)" required /></label>
+				<label><span>Return date</span><input name="endDate" type="date" [min]="startDate()" [value]="endDate()" (change)="setEndDate($event)" required /></label>
+				<label class="vehicle-select"><span>Vehicle</span>
+					<select name="vehicleId" (change)="setVehicle($event)" required>
+						<option value="">Select an available vehicle</option>
+						@for (vehicle of vehicleOptions(); track vehicle.id) {
+							@if (vehicle.available) { <option [value]="vehicle.id">{{ vehicle.make }} {{ vehicle.model }} · {{ vehicle.plate }} · {{ vehicle.dailyRate | currency }}/day</option> }
+						}
+					</select>
+				</label>
+				<div class="estimate"><span>Estimated rental</span><strong>{{ estimatedTotal() | currency }}</strong></div>
+				<button type="submit" class="save-button" [disabled]="vehicleOptions().length === 0 || saving()">{{ saving() ? 'Saving…' : 'Confirm booking' }}</button>
+			</form>
+			@if (formError()) { <p class="form-error" role="alert">{{ formError() }}</p> }
+			@if (vehicleOptions().length === 0) { <p class="form-error">Add a vehicle to the fleet before creating a booking.</p> }
+		</section>
+	}
+
+	<section class="booking-section">
+		<div class="booking-toolbar">
+			<div><h2>All bookings</h2><p>{{ filteredBookings().length }} of {{ bookings().length }} reservations</p></div>
+			<div class="filters">
+				<label class="search-box"><span class="visually-hidden">Search bookings</span><input type="search" placeholder="Search customer, vehicle, ID" [value]="searchTerm()" (input)="setSearch($event)" /></label>
+				<label><span class="visually-hidden">Filter booking status</span><select [value]="statusFilter()" (change)="setStatus($event)"><option>All statuses</option><option>Confirmed</option><option>Active</option><option>Completed</option><option>Cancelled</option></select></label>
+			</div>
+		</div>
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Booking</th><th>Customer</th><th>Vehicle</th><th>Rental period</th><th class="numeric">Total</th><th>Status</th><th>Action</th></tr></thead>
+				<tbody>
+					@for (booking of filteredBookings(); track booking.id) {
+						<tr>
+							<td class="booking-reference">{{ booking.id }}<small>Created {{ booking.createdAt | date: 'MMM d' }}</small></td>
+							<td><strong class="customer-name">{{ booking.customerName }}</strong><small class="subline">{{ booking.customerEmail }}</small></td>
+							<td>{{ vehicleName(booking.vehicleId) }}</td>
+							<td class="period">{{ booking.startDate | date: 'MMM d' }} – {{ booking.endDate | date: 'MMM d, y' }}</td>
+							<td class="numeric amount">{{ booking.total | currency }}</td>
+							<td><span class="status" [class.active-status]="booking.status === 'Active'" [class.complete-status]="booking.status === 'Completed'" [class.cancelled-status]="booking.status === 'Cancelled'">{{ booking.status }}</span></td>
+							<td><select class="row-action" [value]="booking.status" [attr.aria-label]="'Update ' + booking.id + ' status'" (change)="updateStatus(booking.id, $any($event.target).value)"><option value="Confirmed">Confirmed</option><option value="Active">Active</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option></select></td>
+						</tr>
+					} @empty {
+						<tr><td colspan="7" class="empty-row">No bookings match your search. Change the filters or create a booking.</td></tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</section>
+</main>

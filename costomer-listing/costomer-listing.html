@@ -1,0 +1,124 @@
+<main class="ledger-page">
+	@if (loadError()) { <p class="ledger-error" role="alert">{{ loadError() }}</p> }
+	@if (loading()) { <p class="ledger-loading" role="status">Loading customer account from backend…</p> }
+	<header class="page-heading">
+		<div>
+			<p class="eyebrow">ACCOUNTS / CUSTOMERS</p>
+			<h1>Customer ledger</h1>
+			<p class="page-description">Review rental charges and payments by customer.</p>
+		</div>
+		<label class="customer-picker">
+			<span>Customer</span>
+			<select [value]="selectedCustomerId()" (change)="setCustomer($event)">
+				@for (customer of customers(); track customer.id) {
+					<option [value]="customer.id">{{ customer.name }}</option>
+				}
+			</select>
+		</label>
+	</header>
+
+	@if (selectedCustomer(); as customer) {
+		<section class="customer-strip" aria-label="Selected customer details">
+			<div class="customer-avatar" aria-hidden="true">{{ customer.name.charAt(0) }}</div>
+			<div class="customer-identity">
+				<strong>{{ customer.name }}</strong>
+				<span>{{ customer.email }}</span>
+			</div>
+			<div class="customer-phone"><span>Phone</span><strong>{{ customer.phone }}</strong></div>
+			<div class="account-status"><span></span>Active account</div>
+		</section>
+
+		<section class="summary-grid" aria-label="Account totals">
+			<article class="summary-item">
+				<span class="summary-label">Outstanding balance</span>
+				<strong class="summary-value" [class.balance-clear]="balanceDue() <= 0">{{ balanceDue() | currency }}</strong>
+				<span class="summary-note">{{ balanceDue() > 0 ? 'Amount due' : 'Account settled' }}</span>
+			</article>
+			<article class="summary-item">
+				<span class="summary-label">Total billed</span>
+				<strong class="summary-value">{{ totalBilled() | currency }}</strong>
+				<span class="summary-note">Rental and service charges</span>
+			</article>
+			<article class="summary-item">
+				<span class="summary-label">Total paid</span>
+				<strong class="summary-value">{{ totalPaid() | currency }}</strong>
+				<span class="summary-note">Payments recorded</span>
+			</article>
+			<article class="summary-item">
+				<span class="summary-label">Ledger entries</span>
+				<strong class="summary-value">{{ customerEntries().length }}</strong>
+				<span class="summary-note">Charges and payments</span>
+			</article>
+		</section>
+
+		<section class="ledger-section">   
+			<div class="section-heading">  
+				<div>
+					<h2>Account activity</h2>
+					<p>Charges increase the balance; payments reduce it.</p>
+				</div>
+				<label class="search-box">
+					<span class="visually-hidden">Search ledger entries</span>
+					<input type="search" placeholder="Search activity" [value]="searchTerm()" (input)="setSearch($event)" />
+				</label>
+			</div>
+
+			<div class="table-scroll">
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">Date</th>
+							<th scope="col">Reference</th>
+							<th scope="col">Description</th>
+							<th scope="col" class="numeric">Debit</th>
+							<th scope="col" class="numeric">Credit</th>
+							<th scope="col" class="numeric">Balance</th>
+						</tr>
+					</thead>
+					<tbody>
+						@for (entry of visibleEntries(); track entry.id) {
+							<tr>
+								<td class="date-cell">{{ entry.date | date: 'MMM d, y' }}</td>
+								<td><span class="reference">{{ entry.reference }}</span></td>
+								<td>
+									<span class="entry-description">{{ entry.description }}</span>
+									<span class="entry-kind" [class.payment-kind]="entry.kind === 'Payment'">{{ entry.kind }}</span>
+								</td>
+								<td class="numeric">{{ entry.kind === 'Charge' ? (entry.amount | currency) : '—' }}</td>
+								<td class="numeric">{{ entry.kind === 'Payment' ? (entry.amount | currency) : '—' }}</td>
+								<td class="numeric balance-cell">{{ entry.balanceAfter | currency }}</td>
+							</tr>
+						} @empty {
+							<tr>
+								<td class="empty-state" colspan="6">No ledger entries match this search.</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			<footer class="table-footer">Showing {{ visibleEntries().length }} of {{ customerEntries().length }} entries</footer>
+		</section>
+
+		<section class="payment-section">
+			<div>
+				<p class="eyebrow">ACCOUNT ACTION</p>
+				<h2>Record a payment</h2>
+				<p class="payment-description">Add a payment to {{ customer.name }}'s account. It will be saved to the rental database.</p>
+			</div>
+			<div class="payment-controls">
+				<label>
+					<span>Amount</span>
+					<div class="amount-input"><span>$</span><input aria-label="Payment amount" type="number" min="0.01" step="0.01" placeholder="0.00" [value]="paymentAmount()" (input)="setPaymentAmount($event)" /></div>
+				</label>
+				<label class="note-field">
+					<span>Payment note</span>
+					<input aria-label="Payment note" type="text" placeholder="e.g. Cash payment" [value]="paymentNote()" (input)="setPaymentNote($event)" />
+				</label>
+				<button type="button" class="record-button" [disabled]="savingPayment()" (click)="recordPayment()">{{ savingPayment() ? 'Saving…' : 'Record payment' }}</button>
+			</div>
+			@if (paymentError()) {
+				<p class="payment-error" role="alert">{{ paymentError() }}</p>
+			}
+		</section>  
+	}
+</main>

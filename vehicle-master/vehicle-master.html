@@ -1,0 +1,68 @@
+<main class="fleet-page">
+	@if (loadError()) { <p class="api-error" role="alert">{{ loadError() }}</p> }
+	@if (loading()) { <p class="api-loading" role="status">Loading fleet from backend…</p> }
+	<header class="fleet-heading">
+		<div>
+			<p class="eyebrow">FLEET MANAGEMENT</p>
+			<h1>Vehicles</h1>
+			<p class="subtitle">Manage your fleet, availability, and daily rates.</p>
+		</div>
+		<button type="button" class="primary-action" (click)="showForm.update((open) => !open)">
+			{{ showForm() ? 'Close form' : '+ Add vehicle' }}
+		</button>
+	</header>
+
+	<section class="fleet-stats" aria-label="Fleet totals">
+		<div><span>Total fleet</span><strong>{{ vehicles().length }}</strong></div>
+		<div><span>Available today</span><strong>{{ availableCount() }}</strong></div>
+		<div><span>On rental</span><strong>{{ vehicles().length - availableCount() }}</strong></div>
+	</section>
+
+	@if (showForm()) {
+		<section class="vehicle-form-section">
+			<div class="form-heading"><div><h2>Add a vehicle</h2><p>New vehicles are immediately available for booking.</p></div></div>
+			<form class="vehicle-form" (submit)="addVehicle($event)">
+				<label><span>Make</span><input name="make" required maxlength="40" placeholder="e.g. Toyota" /></label>
+				<label><span>Model</span><input name="model" required maxlength="40" placeholder="e.g. Camry" /></label>
+				<label><span>Year</span><input name="year" type="number" min="2000" [max]="today.slice(0, 4)" required placeholder="2025" /></label>
+				<label><span>Plate number</span><input name="plate" required maxlength="12" placeholder="ABC-1234" /></label>
+				<label><span>Category</span><select name="category" required><option value="">Choose category</option>@for (category of categories; track category) {<option [value]="category">{{ category }}</option>}</select></label>
+				<label><span>Daily rate</span><input name="dailyRate" type="number" min="1" step="0.01" required placeholder="75" /></label>
+				<label><span>Color</span><input name="color" required maxlength="24" placeholder="Silver" /></label>
+				<button class="save-button" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save vehicle' }}</button>
+			</form>
+			@if (errorMessage()) { <p class="form-error" role="alert">{{ errorMessage() }}</p> }
+		</section>
+	}
+
+	<section class="fleet-section">
+		<div class="fleet-toolbar">
+			<div><h2>Fleet inventory</h2><p>{{ filteredVehicles().length }} vehicles</p></div>
+			<div class="filters">
+				<label class="search-field"><span class="visually-hidden">Search vehicles</span><input type="search" placeholder="Search make, model, plate" [value]="searchTerm()" (input)="setSearch($event)" /></label>
+				<label><span class="visually-hidden">Filter by category</span><select [value]="categoryFilter()" (change)="setCategory($event)"><option>All categories</option>@for (category of categories; track category) {<option [value]="category">{{ category }}</option>}</select></label>
+				<label><span class="visually-hidden">Filter by availability</span><select [value]="availabilityFilter()" (change)="setAvailability($event)"><option>All vehicles</option><option>Available</option><option>On rental</option></select></label>
+			</div>
+		</div>
+
+		<div class="table-wrap">
+			<table>
+				<thead><tr><th>Vehicle</th><th>Registration</th><th>Category</th><th>Color</th><th class="numeric">Daily rate</th><th>Status</th></tr></thead>
+				<tbody>
+					@for (vehicle of filteredVehicles(); track vehicle.id) {
+						<tr>
+							<td><div class="vehicle-cell"><span class="vehicle-stamp">{{ vehicle.make.slice(0, 1) }}{{ vehicle.model.slice(0, 1) }}</span><span><strong>{{ vehicle.make }} {{ vehicle.model }}</strong><small>{{ vehicle.year }} · {{ vehicle.id }}</small></span></div></td>
+							<td class="plate">{{ vehicle.plate }}</td>
+							<td><span class="category-tag">{{ vehicle.category }}</span></td>
+							<td>{{ vehicle.color }}</td>
+							<td class="numeric rate">{{ vehicle.dailyRate | currency }} <small>/ day</small></td>
+							<td><span class="vehicle-status" [class.unavailable]="!isAvailable(vehicle.id)"><i></i>{{ isAvailable(vehicle.id) ? 'Available' : 'On rental' }}</span></td>
+						</tr>
+					} @empty {
+						<tr><td colspan="6" class="empty-row">No vehicles match these filters.</td></tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</section>
+</main>
